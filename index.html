@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Golf Scorer</title>
+<title>GolfScore</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Lato:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -763,7 +763,7 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
 
   <div class="brand">
     <div class="brand-name">⛳</div>
-    <div class="brand-name" style="font-size:clamp(2rem,9vw,4rem);letter-spacing:0.06em;">GOLF SCORER</div>
+    <div class="brand-name" style="font-size:clamp(2rem,9vw,4rem);letter-spacing:0.06em;">GOLFSCORE</div>
     <div class="brand-tag">Select your game format below</div>
   </div>
 
@@ -1224,32 +1224,44 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
      SHARE SCORECARD MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="share-modal">
-  <div class="modal-box" style="max-width:420px;max-height:88vh;overflow-y:auto;">
+  <div class="modal-box" style="max-width:420px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--gold);letter-spacing:0.08em;">Share Scorecard</div>
       <button onclick="closeShareModal()" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
     </div>
 
-    <!-- Quick send to friends -->
-    <div id="share-quick-friends" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.75rem;margin-bottom:0.85rem;"></div>
+    <!-- Recipients list (auto-populated + add more) -->
+    <div style="font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Recipients</div>
+    <div id="share-recipients" style="margin-bottom:0.75rem;"></div>
 
-    <!-- Manual entry -->
-    <div style="margin-bottom:0.75rem;">
-      <div style="font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Send to any address</div>
+    <!-- Add another recipient -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.75rem;margin-bottom:0.85rem;">
+      <div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Add another recipient</div>
       <div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;">
-        <input id="share-email-input" type="email" placeholder="Email address" style="flex:1;">
-        <button onclick="sendManualEmail()" style="background:rgba(76,175,118,0.1);border:1px solid rgba(76,175,118,0.3);color:var(--green-acc);border-radius:8px;padding:0.4rem 0.75rem;font-size:0.8rem;cursor:pointer;white-space:nowrap;">✉️ Email</button>
+        <input id="share-add-name" type="text" placeholder="Name (optional)" style="flex:1;">
+      </div>
+      <div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;">
+        <input id="share-add-email" type="email" placeholder="Email address" style="flex:1;">
+        <button onclick="shareAddRecipient('email')" style="background:rgba(76,175,118,0.1);border:1px solid rgba(76,175,118,0.3);color:var(--green-acc);border-radius:8px;padding:0.4rem 0.6rem;font-size:0.8rem;cursor:pointer;white-space:nowrap;">＋</button>
       </div>
       <div style="display:flex;gap:0.4rem;">
-        <input id="share-mobile-input" type="tel" placeholder="Mobile number" style="flex:1;">
-        <button onclick="sendManualSMS()" style="background:rgba(91,163,217,0.1);border:1px solid rgba(91,163,217,0.3);color:#5ba3d9;border-radius:8px;padding:0.4rem 0.65rem;font-size:0.8rem;cursor:pointer;white-space:nowrap;">💬 SMS</button>
-        <button onclick="sendManualWhatsApp()" style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:8px;padding:0.4rem 0.65rem;font-size:0.8rem;cursor:pointer;white-space:nowrap;">📱 WA</button>
+        <input id="share-add-mobile" type="tel" placeholder="Mobile number" style="flex:1;">
+        <button onclick="shareAddRecipient('mobile')" style="background:rgba(91,163,217,0.1);border:1px solid rgba(91,163,217,0.3);color:#5ba3d9;border-radius:8px;padding:0.4rem 0.6rem;font-size:0.8rem;cursor:pointer;white-space:nowrap;">＋</button>
       </div>
     </div>
 
+    <!-- Send buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-bottom:0.85rem;">
+      <button onclick="shareSendAll('email')" style="padding:0.65rem 0.25rem;background:rgba(76,175,118,0.1);border:1px solid rgba(76,175,118,0.3);color:var(--green-acc);border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.06em;cursor:pointer;">✉️ Email all</button>
+      <button onclick="shareSendAll('sms')" style="padding:0.65rem 0.25rem;background:rgba(91,163,217,0.1);border:1px solid rgba(91,163,217,0.3);color:#5ba3d9;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.06em;cursor:pointer;">💬 SMS all</button>
+      <button onclick="shareSendAll('wa')" style="padding:0.65rem 0.25rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.06em;cursor:pointer;">📱 WA all</button>
+    </div>
+
     <!-- Preview -->
-    <div style="font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.35rem;">Preview</div>
-    <pre id="share-preview" style="font-size:0.65rem;line-height:1.5;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.65rem;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;"></pre>
+    <details style="margin-bottom:0.5rem;">
+      <summary style="font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);cursor:pointer;margin-bottom:0.35rem;">Preview scorecard text</summary>
+      <pre id="share-preview" style="font-size:0.62rem;line-height:1.5;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.65rem;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;margin-top:0.5rem;"></pre>
+    </details>
   </div>
 </div>
 
@@ -3980,7 +3992,7 @@ function buildScorecardText(gameState) {
     itc:'In the Chair', skins:'Skins', indiv:'Individual'};
   const fmt = fmtLabels[g.gt] || g.gt;
   const date = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-  let txt = `⛳ GOLF SCORER
+  let txt = `⛳ GOLFSCORE
 `;
   txt += `${date} · ${g.course || ''} · ${g.tee || ''} Tees
 `;
@@ -4010,41 +4022,108 @@ function buildScorecardText(gameState) {
   });
   txt += `${'─'.repeat(32)}
 `;
-  txt += `Sent via Golf Scorer app`;
+  txt += `Sent via GolfScore app`;
   return txt;
 }
 
+// Share recipients list: [{name, email, mobile, checked}]
+window.shareRecipients = [];
+
 function shareScorecard(gameState) {
   const g = gameState || G;
-  const text = buildScorecardText(g);
-  const friends = getFriends().filter(f => f.email || f.mobile);
+  window.scoreText = buildScorecardText(g);
+  document.getElementById('share-preview').textContent = window.scoreText;
 
-  // Build share options modal
-  const modal = document.getElementById('share-modal');
-  document.getElementById('share-preview').textContent = text;
+  // Build recipients: players in the round who are in friends list
+  const friends = getFriends();
+  const playerNames = g.names || [];
+  window.shareRecipients = [];
 
-  // Populate friends quick-send buttons
-  const quickEl = document.getElementById('share-quick-friends');
-  if (friends.length > 0) {
-    quickEl.innerHTML = '<div style="font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Quick send to friends</div>' +
-      friends.map(f => {
-        const initials = f.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-        return `<div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;align-items:center;">
-          <div style="width:28px;height:28px;border-radius:50%;background:var(--green-acc);color:#0a160e;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${initials}</div>
-          <div style="flex:1;font-size:0.8rem;color:var(--white);">${f.name}</div>
-          ${f.email?`<button onclick="sendEmail('${f.email}',scoreText)" style="background:rgba(76,175,118,0.1);border:1px solid rgba(76,175,118,0.3);color:var(--green-acc);border-radius:6px;padding:3px 8px;font-size:0.65rem;cursor:pointer;">✉️</button>`:''}
-          ${f.mobile?`<button onclick="sendSMS('${f.mobile}',scoreText)" style="background:rgba(91,163,217,0.1);border:1px solid rgba(91,163,217,0.3);color:#5ba3d9;border-radius:6px;padding:3px 8px;font-size:0.65rem;cursor:pointer;">💬</button>
-                     <button onclick="sendWhatsApp('${f.mobile}',scoreText)" style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:6px;padding:3px 8px;font-size:0.65rem;cursor:pointer;">📱</button>`:''}
-        </div>`;
-      }).join('');
-    quickEl.style.display = '';
-  } else {
-    quickEl.style.display = 'none';
+  // Auto-add players who match friends by name
+  playerNames.forEach(pName => {
+    const f = friends.find(fr => fr.name.toLowerCase() === pName.toLowerCase());
+    if (f && (f.email || f.mobile)) {
+      window.shareRecipients.push({ name: f.name, email: f.email||'', mobile: f.mobile||'', checked: true, source:'player' });
+    }
+  });
+
+  // Also add other friends with contact details (unchecked)
+  friends.forEach(f => {
+    if (!(f.email||f.mobile)) return;
+    const already = window.shareRecipients.find(r => r.name.toLowerCase()===f.name.toLowerCase());
+    if (!already) {
+      window.shareRecipients.push({ name:f.name, email:f.email||'', mobile:f.mobile||'', checked:false, source:'friend' });
+    }
+  });
+
+  renderShareRecipients();
+  document.getElementById('share-modal').classList.add('open');
+}
+
+function renderShareRecipients() {
+  const el = document.getElementById('share-recipients');
+  if (!el) return;
+  if (window.shareRecipients.length === 0) {
+    el.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);padding:0.5rem 0;">No friends with contact details. Add email/mobile to friends to auto-populate.</div>';
+    return;
   }
+  el.innerHTML = window.shareRecipients.map((r, i) => {
+    const initials = r.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const badge = r.source==='player' ? '<span style="font-size:0.55rem;background:rgba(212,168,67,0.2);color:var(--gold);border-radius:4px;padding:1px 5px;margin-left:4px;letter-spacing:0.06em;">IN GAME</span>' : '';
+    const contactLine = [r.email, r.mobile].filter(Boolean).join(' · ');
+    return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.75rem;background:${r.checked?'rgba(76,175,118,0.07)':'var(--surface2)'};border:1px solid ${r.checked?'rgba(76,175,118,0.3)':'var(--border)'};border-radius:9px;margin-bottom:0.4rem;cursor:pointer;" onclick="shareToggle(${i})">
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--${r.checked?'green-acc':'muted'});color:#0a160e;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0;">${initials}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.85rem;color:var(--white);font-weight:500;">${r.name}${badge}</div>
+        <div style="font-size:0.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${contactLine}</div>
+      </div>
+      <div style="width:18px;height:18px;border-radius:4px;border:1.5px solid ${r.checked?'var(--green-acc)':'var(--border)'};background:${r.checked?'var(--green-acc)':'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        ${r.checked?'<span style="color:#0a160e;font-size:0.7rem;font-weight:700;">✓</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  // Store text for inline buttons
-  window.scoreText = text;
-  modal.classList.add('open');
+function shareToggle(i) {
+  if (window.shareRecipients[i]) {
+    window.shareRecipients[i].checked = !window.shareRecipients[i].checked;
+    renderShareRecipients();
+  }
+}
+
+function shareAddRecipient(type) {
+  const name   = (document.getElementById('share-add-name')?.value || '').trim();
+  const email  = (document.getElementById('share-add-email')?.value || '').trim();
+  const mobile = (document.getElementById('share-add-mobile')?.value || '').trim();
+  const val = type === 'email' ? email : mobile;
+  if (!val) { alert(type === 'email' ? 'Enter an email address.' : 'Enter a mobile number.'); return; }
+  window.shareRecipients.push({ name: name||val, email: type==='email'?email:'', mobile: type==='mobile'?mobile:'', checked:true, source:'manual' });
+  // Clear inputs
+  if (document.getElementById('share-add-email')) document.getElementById('share-add-email').value = '';
+  if (document.getElementById('share-add-mobile')) document.getElementById('share-add-mobile').value = '';
+  if (document.getElementById('share-add-name')) document.getElementById('share-add-name').value = '';
+  renderShareRecipients();
+}
+
+function shareSendAll(channel) {
+  const checked = (window.shareRecipients||[]).filter(r => r.checked);
+  if (checked.length === 0) { alert('Select at least one recipient.'); return; }
+  const text = window.scoreText || '';
+
+  if (channel === 'email') {
+    const addrs = checked.map(r=>r.email).filter(Boolean);
+    if (!addrs.length) { alert('No email addresses in selected recipients.'); return; }
+    sendEmail(addrs.join(','), text);
+  } else if (channel === 'sms') {
+    const nums = checked.map(r=>r.mobile).filter(Boolean);
+    if (!nums.length) { alert('No mobile numbers in selected recipients.'); return; }
+    // Send one by one (browsers limit multi-recipient SMS)
+    nums.forEach((n,i) => setTimeout(() => sendSMS(n, text), i * 800));
+  } else if (channel === 'wa') {
+    const nums = checked.map(r=>r.mobile).filter(Boolean);
+    if (!nums.length) { alert('No mobile numbers in selected recipients.'); return; }
+    nums.forEach((n,i) => setTimeout(() => sendWhatsApp(n, text), i * 800));
+  }
 }
 
 function sendEmail(address, text) {
@@ -4060,21 +4139,6 @@ function sendWhatsApp(number, text) {
   const clean = number.replace(/[^0-9+]/g,'');
   const body  = encodeURIComponent(text || window.scoreText || '');
   window.open(`https://wa.me/${clean}?text=${body}`);
-}
-function sendManualEmail() {
-  const addr = document.getElementById('share-email-input').value.trim();
-  if (!addr) { alert('Enter an email address.'); return; }
-  sendEmail(addr, window.scoreText);
-}
-function sendManualSMS() {
-  const num = document.getElementById('share-mobile-input').value.trim();
-  if (!num) { alert('Enter a mobile number.'); return; }
-  sendSMS(num, window.scoreText);
-}
-function sendManualWhatsApp() {
-  const num = document.getElementById('share-mobile-input').value.trim();
-  if (!num) { alert('Enter a mobile number.'); return; }
-  sendWhatsApp(num, window.scoreText);
 }
 function closeShareModal() {
   document.getElementById('share-modal').classList.remove('open');
@@ -4096,13 +4160,13 @@ function shareBackup() {
   const data = getAllData();
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type:'application/json' });
-  const file = new File([blob], 'golf-scorer-backup.json', { type:'application/json' });
+  const file = new File([blob], 'golfscore-backup.json', { type:'application/json' });
 
   // Try Web Share API (iOS/Android native share sheet)
   if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })) {
     navigator.share({
-      title: 'Golf Scorer Backup',
-      text:  'Golf Scorer data backup — save to Files/iCloud',
+      title: 'GolfScore Backup',
+      text:  'GolfScore data backup — save to Files/iCloud',
       files: [file]
     }).catch(e => {
       // User cancelled share or error — fall back to download
@@ -4118,7 +4182,7 @@ function downloadBackup(json) {
   const blob = new Blob([json || JSON.stringify(getAllData(), null, 2)], { type:'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = 'golf-scorer-backup.json';
+  a.href = url; a.download = 'golfscore-backup.json';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
@@ -4157,7 +4221,7 @@ function importBackup(input) {
         }, 2500);
       }
     } catch(err) {
-      alert('Could not read backup file. Make sure it\'s a valid Golf Scorer backup.');
+      alert('Could not read backup file. Make sure it\'s a valid GolfScore backup.');
     }
   };
   reader.readAsText(file);
