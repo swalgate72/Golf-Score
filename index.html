@@ -257,6 +257,18 @@ select option { background:#1a2a1f; }
 .hi-winner { font-size:0.72rem; color:var(--gold); }
 .hi-arrow { color:var(--muted); font-size:0.9rem; flex-shrink:0; }
 .history-empty { text-align:center; padding:3rem 1rem; color:var(--muted); font-size:0.85rem; }
+.hist-filter-btn {
+  flex-shrink:0; padding:0.3rem 0.75rem;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:20px; color:var(--muted);
+  font-family:'Barlow Condensed',sans-serif; font-size:0.8rem; font-weight:600;
+  letter-spacing:0.06em; cursor:pointer; white-space:nowrap; transition:all 0.15s;
+}
+.hist-filter-btn.active {
+  background:var(--gold); border-color:var(--gold); color:#0e1a13;
+}
+html.light .hist-filter-btn { background:rgba(26,51,32,0.06); color:var(--white); }
+html.light .hist-filter-btn.active { background:var(--gold); color:#fff; }
 
 /* History detail screen */
 #history-detail {
@@ -692,10 +704,14 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
     <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.85rem;line-height:1.5;">
       Your data is saved on this device. Back it up after each round so it survives app updates or cache clears.
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+    <button id="copy-backup-btn" onclick="copyBackupToClipboard()"
+      style="width:100%;padding:0.75rem;background:var(--gold);color:#0e1a13;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.12em;cursor:pointer;margin-bottom:0.5rem;">
+      📋 Copy backup to clipboard
+    </button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.5rem;">
       <button onclick="shareBackup()"
         style="padding:0.7rem;background:rgba(76,175,118,0.1);border:1px solid rgba(76,175,118,0.3);border-radius:10px;color:var(--green-acc);font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;cursor:pointer;">
-        📤 Export backup
+        📤 Export file
       </button>
       <label id="import-btn"
         style="display:block;padding:0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;cursor:pointer;text-align:center;">
@@ -703,6 +719,7 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
         <input type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="importBackup(this)">
       </label>
     </div>
+    <div style="font-size:0.62rem;color:var(--muted);line-height:1.5;">Tip: paste clipboard into an iCloud Note called "GolfScore Backup" — next time just overwrite it.</div>
   </div>
 
   <!-- Theme + friends card -->
@@ -1145,7 +1162,7 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
   <button class="btn-primary" onclick="startGame()">TEE OFF →</button>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;width:100%;max-width:440px;margin-top:0.4rem;">
     <button class="btn-history" onclick="show('profile')" style="margin:0;">👤 Profile</button>
-    <button class="btn-history" onclick="showHistory()" style="margin:0;">📋 History</button>
+    <button class="btn-history" onclick="showHistory(false)" style="margin:0;">📋 History</button>
     <button class="btn-history" onclick="showFriends()" style="margin:0;">👥 Friends</button>
   </div>
 </div>
@@ -1347,8 +1364,22 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
 ══════════════════════════════════════════ -->
 <div id="history" class="screen">
   <div class="history-header">
-    <button class="btn-ghost" onclick="show('setup')">← Back</button>
+    <button class="btn-ghost" id="history-back-btn" onclick="show('setup')">← Back</button>
     <h2>Past Matches</h2>
+  </div>
+  <!-- Filter bar -->
+  <div style="padding:0.6rem 1rem 0;max-width:520px;margin:0 auto;">
+    <div style="display:flex;gap:0.4rem;overflow-x:auto;padding-bottom:0.4rem;scrollbar-width:none;">
+      <button class="hist-filter-btn active" data-filter="all"    onclick="setHistoryFilter('all')">All</button>
+      <button class="hist-filter-btn"         data-filter="match2"  onclick="setHistoryFilter('match2')">2 Ball</button>
+      <button class="hist-filter-btn"         data-filter="split6"  onclick="setHistoryFilter('split6')">Split 6</button>
+      <button class="hist-filter-btn"         data-filter="betterball" onclick="setHistoryFilter('betterball')">Better Ball</button>
+      <button class="hist-filter-btn"         data-filter="csm"     onclick="setHistoryFilter('csm')">Combined</button>
+      <button class="hist-filter-btn"         data-filter="itc"     onclick="setHistoryFilter('itc')">In Chair</button>
+      <button class="hist-filter-btn"         data-filter="skins"   onclick="setHistoryFilter('skins')">Skins</button>
+      <button class="hist-filter-btn"         data-filter="indiv"   onclick="setHistoryFilter('indiv')">Individual</button>
+    </div>
+    <div id="history-count" style="font-size:0.62rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.06em;"></div>
   </div>
   <div class="history-list" id="history-list"></div>
 </div>
@@ -4172,6 +4203,35 @@ function getAllData() {
   return data;
 }
 
+function copyBackupToClipboard() {
+  const json = JSON.stringify(getAllData(), null, 2);
+  const btn = document.getElementById('copy-backup-btn');
+  const success = () => {
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy backup to clipboard'; }, 2000); }
+  };
+  const fail = () => { alert('Copy failed — use Export file instead.'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(json).then(success).catch(() => {
+      // try execCommand fallback
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = json; ta.style.cssText = 'position:fixed;opacity:0;';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta); success();
+      } catch(e) { fail(); }
+    });
+  } else {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = json; ta.style.cssText = 'position:fixed;opacity:0;';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta); success();
+    } catch(e) { fail(); }
+  }
+}
+
 function shareBackup() {
   const data = getAllData();
   const json = JSON.stringify(data, null, 2);
@@ -4498,8 +4558,7 @@ function saveToHistory(gameState) {
     allowPct:   gameState.allowPct   ?? null,
   };
   history.unshift(entry);
-  const trimmed = history.slice(0, 20);
-  try { localStorage.setItem('gs_history', JSON.stringify(trimmed)); } catch(e) {}
+  try { localStorage.setItem('gs_history', JSON.stringify(history)); } catch(e) {}
 }
 
 function getWinnerSummary(g) {
@@ -4569,13 +4628,50 @@ function fmtIcon(gt) {
   return { split6:'🏌️', betterball:'⛳', csm:'📊', itc:'🪑' }[gt] || '⛳';
 }
 
-function showHistory() {
-  const history = getHistory();
-  const list = document.getElementById('history-list');
-  if (history.length === 0) {
-    list.innerHTML = '<div class="history-empty">No completed matches yet.<br>Finish a round and it will appear here.</div>';
+let historyFilter = 'all';
+
+function setHistoryFilter(f) {
+  historyFilter = f;
+  document.querySelectorAll('.hist-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  renderHistoryList();
+}
+
+function showHistory(fromProfile) {
+  if (fromProfile) {
+    const backBtn = document.getElementById('history-back-btn');
+    if (backBtn) backBtn.setAttribute('onclick', "show('profile')");
   } else {
-    list.innerHTML = history.map((entry, idx) => `
+    const backBtn = document.getElementById('history-back-btn');
+    if (backBtn) backBtn.setAttribute('onclick', "show('setup')");
+  }
+  renderHistoryList();
+  show('history');
+}
+
+function renderHistoryList() {
+  const all = getHistory();
+  const filtered = historyFilter === 'all' ? all : all.filter(e => e.gt === historyFilter);
+  const list = document.getElementById('history-list');
+  const countEl = document.getElementById('history-count');
+  if (countEl) {
+    const total = all.length;
+    const shown = filtered.length;
+    countEl.textContent = historyFilter === 'all'
+      ? `${total} match${total===1?'':'es'} total`
+      : `${shown} of ${total} match${total===1?'':'es'}`;
+  }
+  if (filtered.length === 0) {
+    list.innerHTML = all.length === 0
+      ? '<div class="history-empty">No completed matches yet.<br>Finish a round and it will appear here.</div>'
+      : '<div class="history-empty">No matches for this format yet.</div>';
+    return;
+  }
+  // Use original indices for delete/detail (must reference all[], not filtered[])
+  list.innerHTML = filtered.map(entry => {
+    const idx = all.indexOf(entry);
+    return `
       <div class="history-item" onclick="showHistoryDetail(${idx})">
         <div class="hi-icon">${fmtIcon(entry.gt)}</div>
         <div class="hi-body">
@@ -4588,9 +4684,8 @@ function showHistory() {
           onmouseenter="this.style.color='#d96b4a';this.style.background='rgba(217,107,74,0.1)'"
           onmouseleave="this.style.color='rgba(255,255,255,0.2)';this.style.background='none'">🗑</button>
         <div class="hi-arrow">›</div>
-      </div>`).join('');
-  }
-  show('history');
+      </div>`;
+  }).join('');
 }
 
 function showHistoryDetail(idx) {
@@ -4658,7 +4753,7 @@ function deleteHistoryEntry(idx) {
 ${label}`)) return;
   history.splice(idx, 1);
   try { localStorage.setItem('gs_history', JSON.stringify(history)); } catch(e) {}
-  showHistory(); // re-render the list
+  renderHistoryList(); // re-render the list
 }
 
 // ═══════════════════════════════════════════════
