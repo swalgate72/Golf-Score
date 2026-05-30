@@ -733,6 +733,16 @@ html.light .btn-play { background:#1a3a22; color:#ffffff; font-weight:700; box-s
     </button>
   </div>
 
+  <!-- Resume round banner (shown if round in progress) -->
+  <div id="prof-resume-banner" style="display:none;width:100%;max-width:440px;background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.3);border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.5rem;">
+    <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.3rem;">Round in progress</div>
+    <div id="prof-resume-info" style="font-size:0.82rem;color:var(--white);margin-bottom:0.6rem;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+      <button onclick="profResumeRound()" style="padding:0.6rem;background:var(--gold);color:#0e1a13;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.1em;cursor:pointer;">▶ RESUME</button>
+      <button onclick="profDiscardRound()" style="padding:0.6rem;background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:600;letter-spacing:0.08em;cursor:pointer;">✕ Discard</button>
+    </div>
+  </div>
+
   <!-- Save + Play -->
   <div style="width:100%;max-width:440px;display:grid;grid-template-columns:1fr;gap:0.6rem;margin-top:0.25rem;">
     <button class="btn-play" onclick="saveProfileAndPlay()">⛳ LET'S PLAY GOLF →</button>
@@ -1524,6 +1534,11 @@ let pendingPar = []; // Par per hole being built in wizard (18 values)
 // UTILS
 // ═══════════════════════════════════════════════
 function show(id) {
+  // Auto-save when leaving profile screen
+  const current = document.querySelector('.screen.active');
+  if (current && current.id === 'profile' && id !== 'profile') {
+    try { saveProfile(); } catch(e) {}
+  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
@@ -3484,6 +3499,7 @@ function showFinal() {
 
   document.getElementById('final-log').innerHTML = buildLogRows(G.log, false);
   saveToHistory(G);
+  autoBackupAll();
   clearRound();
   show('final');
   // Auto-trigger backup share after short delay
@@ -4271,6 +4287,51 @@ function profileSelectTheme(theme, save) {
   if (lightBtn) lightBtn.style.borderColor = theme === 'light' ? '#7a5c10'     : 'transparent';
 }
 
+function updateProfileResumeBanner() {
+  try {
+    const saved = localStorage.getItem('gs_round');
+    if (!saved) { document.getElementById('prof-resume-banner').style.display='none'; return; }
+    const r = JSON.parse(saved);
+    if (!r||!r.names||r.hole===undefined||r.hole>=18) {
+      clearRound();
+      document.getElementById('prof-resume-banner').style.display='none';
+      return;
+    }
+    const desc = (r.gt==='split6'||r.gt==='itc'||r.gt==='skins'||r.gt==='indiv'||r.gt==='match2')
+      ? r.names.join(', ')
+      : `${r.names[0]} & ${r.names[1]} vs ${r.names[2]} & ${r.names[3]}`;
+    document.getElementById('prof-resume-info').textContent = `${desc} — Hole ${r.hole+1} · ${r.course}`;
+    document.getElementById('prof-resume-banner').style.display = '';
+  } catch(e) {
+    document.getElementById('prof-resume-banner').style.display='none';
+  }
+}
+
+function profResumeRound() {
+  try {
+    G = JSON.parse(localStorage.getItem('gs_round'));
+    setupGameUI(); renderScoreHeader(); renderLog(); renderHoleEntry();
+    show('game');
+  } catch(e) { clearRound(); }
+}
+
+function profDiscardRound() {
+  if (!confirm('Discard the current round?')) return;
+  clearRound();
+  document.getElementById('prof-resume-banner').style.display = 'none';
+}
+
+function autoBackupAll() {
+  // Saves everything to localStorage backup key AND triggers share if post-round
+  try {
+    const data = getAllData();
+    // Also capture current round if in progress
+    const curRound = localStorage.getItem('gs_round');
+    if (curRound) data['gs_round'] = JSON.parse(curRound);
+    localStorage.setItem('gs_last_backup', JSON.stringify({ ts: new Date().toISOString(), data }));
+  } catch(e) { console.error('autoBackupAll:', e); }
+}
+
 function saveProfile() {
   const p = {
     name:  document.getElementById('prof-name').value.trim(),
@@ -4699,16 +4760,15 @@ window.addEventListener('DOMContentLoaded', () => {
   loadProfileScreen();
   renderProfClubDropdown();
 
-  // 6. Decide which screen to show
+  // 6. Always show profile first — with resume banner if round in progress
   const profile = getProfile();
-  if (profile && profile.seen) {
-    applyProfileToGame(profile);
-    show('setup');
-  }
-  // else profile screen stays active (first launch)
+  if (profile) applyProfileToGame(profile);
 
-  // 7. Check for in-progress round
+  // Check for in-progress round and show resume option on profile screen
   checkResumeRound();
+  updateProfileResumeBanner();
+
+  // Profile screen is always first — user taps LET'S PLAY to go to setup
 });
 </script>
 
